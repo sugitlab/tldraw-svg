@@ -1,0 +1,91 @@
+:root {
+	font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+	color: #1b1b1b;
+	background: #ffffff;
+}
+
+html,
+body,
+#root {
+	margin: 0;
+	height: 100%;
+}
+
+.app-shell {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.app-shell.is-locked .editor-frame {
+	pointer-events: none;
+}
+
+.status-bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	padding: 8px 12px;
+	background: #f4f4f2;
+	border-bottom: 1px solid #d6d6d2;
+	font-size: 13px;
+}
+
+.status-error {
+	color: #9b1d1d;
+}
+
+.editor-frame {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+}
+
+.app-dialog-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgb(0 0 0 / 40%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+}
+
+.app-dialog {
+	width: min(440px, calc(100vw - 32px));
+	background: #fff;
+	border-radius: 12px;
+	padding: 20px;
+	box-shadow: 0 16px 40px rgb(0 0 0 / 20%);
+}
+
+.app-dialog h2 {
+	margin: 0 0 8px;
+	font-size: 18px;
+}
+
+.app-dialog p {
+	margin: 0 0 16px;
+	line-height: 1.5;
+}
+
+.app-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.app-dialog-actions button {
+	border: 0;
+	border-radius: 8px;
+	padding: 8px 12px;
+	background: #111;
+	color: #fff;
+	cursor: pointer;
+}
+
+.app-dialog-actions button.secondary {
+	background: #e7e7e4;
+	color: #111;
+}
