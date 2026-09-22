@@ -111,6 +111,7 @@ export function EditorApp() {
 	})
 
 	useEffect(() => {
+		controller.start()
 		void controller.initialize()
 		const onBeforeUnload = (event: BeforeUnloadEvent) => {
 			if (!controller.isDirty()) return

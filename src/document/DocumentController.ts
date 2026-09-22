@@ -124,6 +124,10 @@ export class DocumentController {
 		this.scheduleRecovery()
 	}
 
+	start(): void {
+		this.attachStore(this.currentStore)
+	}
+
 	async initialize(): Promise<void> {
 		try {
 			const recovered = await recoveryStore.loadLatestForTab(this.tabId)
@@ -286,8 +290,13 @@ export class DocumentController {
 
 	dispose(): void {
 		this.unlisten?.()
-		if (this.recoveryTimer) window.clearTimeout(this.recoveryTimer)
+		this.unlisten = null
+		if (this.recoveryTimer) {
+			window.clearTimeout(this.recoveryTimer)
+			this.recoveryTimer = null
+		}
 		this.abort?.abort()
+		this.abort = null
 	}
 
 	private async saveInternal(mode: 'save' | 'save-as'): Promise<void> {

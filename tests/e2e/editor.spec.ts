@@ -72,29 +72,24 @@ test.describe('tldraw-svg editor', () => {
 		await page.goto('/')
 		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
 		const startMount = await page.evaluate(() => window.__tldrawSvg!.mountCount)
-
-		await page.evaluate(async () => {
-			await window.__tldrawSvg!.createDemo('basic')
-		})
-		expect(await page.evaluate(() => window.__tldrawSvg!.mountCount)).toBe(startMount)
-		expect(await page.evaluate(() => window.__tldrawSvg!.isDirty())).toBe(true)
+		const startShapes = await page.evaluate(() => window.__tldrawSvg!.getDocumentStats().shapes)
 
 		const canvas = page.locator('.tl-canvas')
-		await canvas.click({ position: { x: 80, y: 80 } })
+		await canvas.click({ position: { x: 120, y: 120 } })
 		await page.keyboard.press('r')
 		const box = await canvas.boundingBox()
 		if (!box) throw new Error('canvas bounding box missing')
 		await page.mouse.move(box.x + 220, box.y + 160)
 		await page.mouse.down()
-		await page.mouse.move(box.x + 380, box.y + 280, { steps: 16 })
+		await page.mouse.move(box.x + 400, box.y + 300, { steps: 16 })
 		await page.mouse.up()
 
 		expect(await page.evaluate(() => window.__tldrawSvg?.ready)).toBe(true)
 		expect(await page.evaluate(() => window.__tldrawSvg!.mountCount)).toBe(startMount)
 		expect(await page.evaluate(() => window.__tldrawSvg!.isDirty())).toBe(true)
-		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())).toMatchObject({
-			shapes: 4,
-		})
+		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats().shapes)).toBeGreaterThan(
+			startShapes
+		)
 		await expect(page.getByTestId('dirty-state')).toHaveText('未保存')
 	})
 

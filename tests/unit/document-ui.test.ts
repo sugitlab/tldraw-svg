@@ -57,4 +57,24 @@ describe('DocumentController UI updates', () => {
 		expect(controller.isDirty()).toBe(true)
 		expect(controller.getState().status).toBe('未保存の変更があります')
 	})
+
+	it('resumes document listeners after dispose', () => {
+		const store = createAppStore()
+		const controller = new DocumentController(store, hooks())
+		const listener = vi.fn()
+		controller.subscribe(listener)
+		listener.mockClear()
+
+		const page = store.allRecords().find((record) => record.typeName === 'page')
+		if (!page || page.typeName !== 'page') throw new Error('expected a page record')
+
+		controller.dispose()
+		store.put([{ ...page, name: 'after-dispose' }])
+		expect(listener).not.toHaveBeenCalled()
+
+		controller.start()
+		store.put([{ ...page, name: 'after-start' }])
+		expect(listener).toHaveBeenCalledTimes(1)
+		expect(controller.isDirty()).toBe(true)
+	})
 })
