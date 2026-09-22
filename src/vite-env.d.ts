@@ -18,5 +18,6 @@ interface Window {
 		getPageCount(): number
 		getDocumentStats(): { pages: number; shapes: number; assets: number }
 		createDemo(kind: 'basic' | 'japanese' | 'images' | 'empty'): Promise<void>
+		insertPng(base64: string): Promise<void>
 	}
 }

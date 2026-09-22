@@ -44,6 +44,29 @@ test.describe('tldraw-svg editor', () => {
 		}, xml)
 	})
 
+	test('D05: inserting a PNG keeps the bytes after encode/open', async ({ page }) => {
+		await page.goto('/')
+		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		const png =
+			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+		await page.evaluate(async (base64) => {
+			await window.__tldrawSvg!.insertPng(base64)
+		}, png)
+		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())).toMatchObject({
+			shapes: 1,
+			assets: 1,
+		})
+		const xml = await page.evaluate(async () => window.__tldrawSvg!.encodeCurrent())
+		expect(xml).toContain('data:image/png;base64,')
+		await page.evaluate(async (text) => {
+			await window.__tldrawSvg!.openSvgText(text)
+		}, xml)
+		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())).toMatchObject({
+			shapes: 1,
+			assets: 1,
+		})
+	})
+
 	test('F01: broken file does not replace the current document', async ({ page }) => {
 		await page.goto('/')
 		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })

@@ -303,8 +303,8 @@ export class DocumentController {
 				handle = await pickSaveFile(normalizeSaveName(this.binding.fileName))
 			} catch (error) {
 				if (isCancelled(error)) return
-				this.fail(error)
-				return
+				handle = null
+				this.hooks.notify('保存ダイアログを使えなかったため、ダウンロードします。')
 			}
 		}
 

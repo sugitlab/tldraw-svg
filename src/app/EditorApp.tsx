@@ -203,6 +203,11 @@ export function EditorApp() {
 								}
 							},
 							createDemo: (kind) => createDemo(editor, kind),
+							insertPng: async (base64) => {
+								const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
+								const file = new File([bytes], 'sample.png', { type: 'image/png' })
+								await editor.putExternalContent({ type: 'files', files: [file] })
+							},
 						}
 						return () => {
 							window.__tldrawSvg = undefined

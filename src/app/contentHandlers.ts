@@ -1,12 +1,15 @@
 import {
-	defaultHandleExternalFileContent,
-	defaultHandleExternalFileReplaceContent,
+	AssetRecordType,
+	createShapesForAssets,
 	defaultHandleExternalTextContent,
 	type Editor,
-	type TLDefaultExternalContentHandlerOpts,
+	type TLAsset,
+	type TLAssetId,
+	type TLImageAsset,
+	type VecLike,
 } from 'tldraw'
+import { decodeAndValidateImage } from '@/assets/imageValidation'
 import { ACCEPTED_IMAGE_MIME_TYPES } from '@/config/app'
-import { editorMediaLimits } from '@/config/assets'
 import type { DocumentController } from '@/document/DocumentController'
 import { DocumentFileError } from '@/document/errors'
 import { decodeEditableSvg } from '@/format/svgCodec'
@@ -16,7 +19,13 @@ export function registerAppContentHandlers(
 	controller: DocumentController,
 	notify: (message: string, kind?: 'info' | 'error') => void
 ): void {
-	const options = createHandlerOptions(notify)
+	editor.registerExternalAssetHandler('file', async ({ file, assetId }) => {
+		return createImageAssetRecord(file, assetId)
+	})
+
+	editor.registerExternalAssetHandler('url', async () => {
+		throw new DocumentFileError('UNSUPPORTED_CONTENT', 'URLブックマークは初版では扱えません。')
+	})
 
 	editor.registerExternalContentHandler('url', async (content) => {
 		notify('URLの埋め込みとブックマークは初版では扱えません。テキストとして貼り付けます。')
@@ -49,7 +58,7 @@ export function registerAppContentHandlers(
 				dedicated.push(file)
 				continue
 			}
-			if (isAcceptedImageFile(file)) {
+			if (await isAcceptedImageFile(file)) {
 				images.push(file)
 				continue
 			}
@@ -72,33 +81,67 @@ export function registerAppContentHandlers(
 			notify(`一部のファイルは取り込みませんでした: ${rejected.join(', ')}`)
 		}
 		if (images.length === 0) return
-		await defaultHandleExternalFileContent(editor, { ...content, files: images }, options)
+		try {
+			await insertLocalImages(editor, images, content.point)
+		} catch (error) {
+			notify(error instanceof Error ? error.message : '画像を取り込みできませんでした。', 'error')
+		}
 	})
 
 	editor.registerExternalContentHandler('file-replace', async (content) => {
-		if (!isAcceptedImageFile(content.file)) {
+		if (!(await isAcceptedImageFile(content.file))) {
 			notify('画像の置き換えは PNG / JPEG / 静止WebPのみです。', 'error')
 			return
 		}
-		await defaultHandleExternalFileReplaceContent(editor, content, options)
+		try {
+			const asset = await createImageAssetRecord(content.file)
+			editor.createAssets([asset])
+			const shape = editor.getShape(content.shapeId)
+			if (!shape || shape.type !== 'image') return
+			editor.updateShape({
+				id: shape.id,
+				type: 'image',
+				props: {
+					assetId: asset.id,
+					w: asset.props.w,
+					h: asset.props.h,
+				},
+			})
+		} catch (error) {
+			notify(error instanceof Error ? error.message : '画像を置き換えできませんでした。', 'error')
+		}
 	})
 }
 
-function createHandlerOptions(
-	notify: (message: string, kind?: 'info' | 'error') => void
-): TLDefaultExternalContentHandlerOpts {
+export async function insertLocalImages(
+	editor: Editor,
+	files: File[],
+	point?: VecLike
+): Promise<void> {
+	const assets: TLAsset[] = []
+	for (const file of files) {
+		assets.push(await createImageAssetRecord(file))
+	}
+	const position = point ?? editor.getViewportPageBounds().center
+	await createShapesForAssets(editor, assets, position)
+}
+
+async function createImageAssetRecord(file: File, assetId?: TLAssetId): Promise<TLImageAsset> {
+	const validated = await decodeAndValidateImage(file)
 	return {
-		...editorMediaLimits,
-		toasts: {
-			addToast: (toast: { title?: string; description?: string }) => {
-				notify(String(toast.title ?? toast.description ?? ''), 'error')
-				return 'toast'
-			},
-			removeToast: () => undefined,
-			clearToasts: () => undefined,
-			toasts: [],
-		} as unknown as TLDefaultExternalContentHandlerOpts['toasts'],
-		msg: ((key: string) => key) as TLDefaultExternalContentHandlerOpts['msg'],
+		id: assetId ?? AssetRecordType.createId(),
+		typeName: 'asset',
+		type: 'image',
+		props: {
+			name: file.name || 'image.png',
+			src: validated.dataUrl,
+			w: validated.width,
+			h: validated.height,
+			mimeType: validated.mimeType,
+			isAnimated: false,
+			fileSize: validated.byteLength,
+		},
+		meta: {},
 	}
 }
 
@@ -116,6 +159,15 @@ async function isDedicatedSvg(file: File): Promise<boolean> {
 	}
 }
 
-function isAcceptedImageFile(file: File): boolean {
-	return ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])
+async function isAcceptedImageFile(file: File): Promise<boolean> {
+	if (ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])) {
+		return true
+	}
+	if (file.type && file.type !== 'application/octet-stream') return false
+	try {
+		await decodeAndValidateImage(file)
+		return true
+	} catch {
+		return false
+	}
 }
