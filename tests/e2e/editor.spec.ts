@@ -29,10 +29,16 @@ test.describe('tldraw-svg editor', () => {
 		await page.goto('/')
 		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
 		await page.evaluate(async () => {
+			await window.__tldrawSvg!.createDemo('images')
 			await window.__tldrawSvg!.createDemo('empty')
 		})
 		const xml = await page.evaluate(async () => window.__tldrawSvg!.encodeCurrent())
 		expect(xml).toContain('width="800"')
+		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())).toEqual({
+			pages: 1,
+			shapes: 0,
+			assets: 0,
+		})
 		await page.evaluate(async (text) => {
 			await window.__tldrawSvg!.openSvgText(text)
 		}, xml)

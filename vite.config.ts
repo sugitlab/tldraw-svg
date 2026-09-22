@@ -12,6 +12,12 @@ export default defineConfig({
 	server: {
 		host: 'localhost',
 		port: 5173,
+		fs: {
+			allow: ['..'],
+		},
+	},
+	optimizeDeps: {
+		exclude: ['@tldraw/assets'],
 	},
 	test: {
 		environment: 'jsdom',

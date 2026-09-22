@@ -16,6 +16,7 @@ interface Window {
 		getFileName(): string
 		isDirty(): boolean
 		getPageCount(): number
+		getDocumentStats(): { pages: number; shapes: number; assets: number }
 		createDemo(kind: 'basic' | 'japanese' | 'images' | 'empty'): Promise<void>
 	}
 }

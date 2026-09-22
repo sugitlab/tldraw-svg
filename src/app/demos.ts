@@ -12,9 +12,7 @@ const TINY_PNG =
 	'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIUlEQVQoU2NkYGD4z0AEYBxVSFQ0qhA/dBHh6lGF+OEGADbdBBHY3k6KAAAAAElFTkSuQmCC'
 
 export async function createDemo(editor: Editor, kind: 'basic' | 'japanese' | 'images' | 'empty'): Promise<void> {
-	editor.selectAll()
-	if (editor.getSelectedShapeIds().length > 0) editor.deleteShapes(editor.getSelectedShapeIds())
-
+	resetDocument(editor)
 	if (kind === 'empty') return
 
 	if (kind === 'basic') {
@@ -110,6 +108,22 @@ export async function createDemo(editor: Editor, kind: 'basic' | 'japanese' | 'i
 			props: { geo: 'triangle', w: 160, h: 140, color: 'green', richText: toRichText('2ページ目') },
 		})
 		editor.setCurrentPage(page1)
+	}
+}
+
+function resetDocument(editor: Editor): void {
+	const pages = editor.getPages()
+	editor.setCurrentPage(pages[0].id)
+	for (const page of pages.slice(1)) {
+		editor.deletePage(page.id)
+	}
+	const leftover = editor.getCurrentPageShapeIds()
+	if (leftover.size > 0) {
+		editor.deleteShapes([...leftover])
+	}
+	const assets = editor.getAssets()
+	if (assets.length > 0) {
+		editor.deleteAssets(assets.map((asset) => asset.id))
 	}
 }
 

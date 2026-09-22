@@ -194,6 +194,14 @@ export function EditorApp() {
 							getFileName: () => controller.getFileName(),
 							isDirty: () => controller.isDirty(),
 							getPageCount: () => editor.getPages().length,
+							getDocumentStats: () => {
+								const records = editor.store.allRecords()
+								return {
+									pages: records.filter((record) => record.typeName === 'page').length,
+									shapes: records.filter((record) => record.typeName === 'shape').length,
+									assets: records.filter((record) => record.typeName === 'asset').length,
+								}
+							},
 							createDemo: (kind) => createDemo(editor, kind),
 						}
 						return () => {
