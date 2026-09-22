@@ -24,6 +24,10 @@ test('generate example files from the running editor', async ({ page }) => {
 		}, kind)
 		const xml = await page.evaluate(async () => window.__tldrawSvg!.encodeCurrent())
 		expect(xml).toContain('urn:tldraw-svg:document:1')
+		if (kind === 'basic') {
+			expect(xml).toContain('"mode":"svg"')
+			expect(xml).toMatch(/<(path|rect|ellipse|g)\b/)
+		}
 		if (kind === 'empty') {
 			const stats = await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())
 			expect(stats).toEqual({ pages: 1, shapes: 0, assets: 0 })

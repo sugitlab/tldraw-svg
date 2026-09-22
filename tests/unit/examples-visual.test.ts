@@ -20,6 +20,15 @@ describe('example visual compatibility', () => {
 		expect(() => extractPayloadFromXml(stripped, 'basic.tldraw.svg')).toThrow(/読み取れません/)
 	})
 
+	it.skipIf(!existsSync(basicPath))('V01: basic example keeps vector preview markup', () => {
+		const xml = readFileSync(basicPath, 'utf8')
+		const payload = extractPayloadFromXml(xml, 'basic.tldraw.svg')
+		expect(payload.preview.mode).toBe('svg')
+		const preview = xml.replace(/<metadata[\s\S]*?<\/metadata>/i, '')
+		expect(preview).toMatch(/<(path|rect|ellipse|polygon)\b/)
+		expect(preview).not.toContain('<image')
+	})
+
 	it.skipIf(!existsSync(basicPath))('V04: preview markup does not need external resources', () => {
 		const xml = readFileSync(basicPath, 'utf8')
 		expect(xml).toContain('urn:tldraw-svg:document:1')

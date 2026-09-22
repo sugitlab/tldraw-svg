@@ -25,21 +25,20 @@ export async function createDemo(editor: Editor, kind: 'basic' | 'japanese' | 'i
 				type: 'geo',
 				x: 100,
 				y: 120,
-				props: { geo: 'rectangle', w: 180, h: 110, richText: toRichText('Start') },
+				props: { geo: 'rectangle', w: 180, h: 110 },
 			},
 			{
 				id: b,
 				type: 'geo',
 				x: 420,
 				y: 180,
-				props: { geo: 'ellipse', w: 180, h: 110, color: 'blue', richText: toRichText('End') },
+				props: { geo: 'ellipse', w: 180, h: 110, color: 'blue' },
 			},
 			{
 				id: arrow,
 				type: 'arrow',
 				x: 280,
 				y: 170,
-				props: { richText: toRichText('connect') },
 			},
 		])
 		bindArrow(editor, arrow, a, b)
