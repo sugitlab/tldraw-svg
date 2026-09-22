@@ -1,16 +1,26 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+async function waitReady(page: Page) {
+	await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+}
+
+async function openSvgText(page: Page, text: string) {
+	const pending = page.evaluate((xml) => window.__tldrawSvg!.openSvgText(xml), text)
+	await page.getByRole('button', { name: '破棄' }).click({ timeout: 20_000 })
+	await pending
+}
 
 test.describe('tldraw-svg editor', () => {
 	test('starts and exposes the editor API', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		await expect(page.getByTestId('file-name')).toHaveText('untitled.tldraw.svg')
 		await expect(page.getByTestId('license-banner')).toHaveCount(0)
 	})
 
 	test('D01/D03/D06: create, save, reload, and keep pages', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		await page.evaluate(async () => {
 			await window.__tldrawSvg!.createDemo('basic')
 		})
@@ -18,17 +28,15 @@ test.describe('tldraw-svg editor', () => {
 		expect(xml).toContain('urn:tldraw-svg:document:1')
 		expect(xml).toContain('tldraw-preview')
 
-		await page.evaluate(async (text) => {
-			await window.__tldrawSvg!.openSvgText(text)
-		}, xml)
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true)
+		await openSvgText(page, xml)
+		await waitReady(page)
 		const dirty = await page.evaluate(() => window.__tldrawSvg!.isDirty())
 		expect(dirty).toBe(false)
 	})
 
 	test('D07: empty document encode/open', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		await page.evaluate(async () => {
 			await window.__tldrawSvg!.createDemo('images')
 			await window.__tldrawSvg!.createDemo('empty')
@@ -40,14 +48,12 @@ test.describe('tldraw-svg editor', () => {
 			shapes: 0,
 			assets: 0,
 		})
-		await page.evaluate(async (text) => {
-			await window.__tldrawSvg!.openSvgText(text)
-		}, xml)
+		await openSvgText(page, xml)
 	})
 
 	test('D05: inserting a PNG keeps the bytes after encode/open', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		const png =
 			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 		await page.evaluate(async (base64) => {
@@ -59,9 +65,7 @@ test.describe('tldraw-svg editor', () => {
 		})
 		const xml = await page.evaluate(async () => window.__tldrawSvg!.encodeCurrent())
 		expect(xml).toContain('data:image/png;base64,')
-		await page.evaluate(async (text) => {
-			await window.__tldrawSvg!.openSvgText(text)
-		}, xml)
+		await openSvgText(page, xml)
 		expect(await page.evaluate(() => window.__tldrawSvg!.getDocumentStats())).toMatchObject({
 			shapes: 1,
 			assets: 1,
@@ -70,7 +74,7 @@ test.describe('tldraw-svg editor', () => {
 
 	test('drawing does not remount the editor', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		const startMount = await page.evaluate(() => window.__tldrawSvg!.mountCount)
 		const startShapes = await page.evaluate(() => window.__tldrawSvg!.getDocumentStats().shapes)
 
@@ -95,7 +99,7 @@ test.describe('tldraw-svg editor', () => {
 
 	test('F01: broken file does not replace the current document', async ({ page }) => {
 		await page.goto('/')
-		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+		await waitReady(page)
 		await page.evaluate(async () => {
 			await window.__tldrawSvg!.createDemo('basic')
 		})
