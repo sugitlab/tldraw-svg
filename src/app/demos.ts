@@ -8,8 +8,8 @@ import {
 } from 'tldraw'
 import { blobToDataUrl } from '@/assets/imageValidation'
 
-const TINY_PNG =
-	'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIUlEQVQoU2NkYGD4z0AEYBxVSFQ0qhA/dBHh6lGF+OEGADbdBBHY3k6KAAAAAElFTkSuQmCC'
+const SAMPLE_PNG =
+	'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAZklEQVR42u3QQREAAAQAMJUE0D+HJORw9liBRWfNZyFAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgTct31C4h1jovIxAAAAAElFTkSuQmCC'
 
 export async function createDemo(editor: Editor, kind: 'basic' | 'japanese' | 'images' | 'empty'): Promise<void> {
 	resetDocument(editor)
@@ -156,7 +156,7 @@ function bindArrow(editor: Editor, arrowId: TLShapeId, start: TLShapeId, end: TL
 }
 
 async function createImageAsset(editor: Editor): Promise<TLAssetId> {
-	const bytes = Uint8Array.from(atob(TINY_PNG), (char) => char.charCodeAt(0))
+	const bytes = Uint8Array.from(atob(SAMPLE_PNG), (char) => char.charCodeAt(0))
 	const file = new File([bytes], 'sample.png', { type: 'image/png' })
 	const src = await blobToDataUrl(file)
 	const id = AssetRecordType.createId()
@@ -168,8 +168,8 @@ async function createImageAsset(editor: Editor): Promise<TLAssetId> {
 			props: {
 				name: 'sample.png',
 				src,
-				w: 10,
-				h: 10,
+				w: 64,
+				h: 64,
 				mimeType: 'image/png',
 				isAnimated: false,
 				fileSize: bytes.byteLength,
