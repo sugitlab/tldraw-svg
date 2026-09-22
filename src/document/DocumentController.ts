@@ -23,6 +23,7 @@ import type {
 	UnsavedChoice,
 	WriteResult,
 } from '@/document/types'
+import { isSameUiState } from '@/document/types'
 import { renderPreview } from '@/export/renderPreview'
 import { createPayload } from '@/format/payload'
 import { displayFileName, normalizeSaveName, previewExportName } from '@/format/filename'
@@ -86,6 +87,7 @@ export class DocumentController {
 		locked: false,
 	}
 	private listeners = new Set<(state: AppUiState) => void>()
+	private acceptEdits = false
 
 	constructor(store: TLStore, hooks: ControllerHooks) {
 		this.currentStore = store
@@ -120,7 +122,38 @@ export class DocumentController {
 	attachEditor(editor: Editor): void {
 		this.editor = editor
 		editor.user.updateUserPreferences({ colorScheme: 'light' })
-		this.scheduleRecovery()
+		if (this.session.documentRevision > 0 || this.session.savedRevision === null || this.isDirty()) {
+			this.acceptEdits = true
+			this.scheduleRecovery()
+			return
+		}
+		this.acceptEdits = false
+		const arm = () => {
+			if (this.editor !== editor) return
+			if (this.session.documentRevision > 0 || this.session.savedRevision === null || this.isDirty()) {
+				this.acceptEdits = true
+				this.scheduleRecovery()
+				return
+			}
+			this.session.documentRevision = 0
+			this.session.savedRevision = 0
+			this.acceptEdits = true
+			this.setUi({ dirty: false })
+			this.scheduleRecovery()
+		}
+		if (typeof requestAnimationFrame === 'function') {
+			requestAnimationFrame(() => requestAnimationFrame(arm))
+		} else {
+			queueMicrotask(arm)
+		}
+	}
+
+	start(): void {
+		this.attachStore(this.currentStore)
+	}
+
+	beginTrackingEdits(): void {
+		this.acceptEdits = true
 	}
 
 	async initialize(): Promise<void> {
@@ -284,9 +317,15 @@ export class DocumentController {
 	}
 
 	dispose(): void {
+		this.acceptEdits = false
 		this.unlisten?.()
-		if (this.recoveryTimer) window.clearTimeout(this.recoveryTimer)
+		this.unlisten = null
+		if (this.recoveryTimer) {
+			window.clearTimeout(this.recoveryTimer)
+			this.recoveryTimer = null
+		}
 		this.abort?.abort()
+		this.abort = null
 	}
 
 	private async saveInternal(mode: 'save' | 'save-as'): Promise<void> {
@@ -427,6 +466,7 @@ export class DocumentController {
 	}
 
 	private replaceLiveStore(store: TLStore): void {
+		this.acceptEdits = false
 		this.attachStore(store)
 		this.hooks.replaceStore(store)
 	}
@@ -435,6 +475,7 @@ export class DocumentController {
 		this.unlisten?.()
 		this.currentStore = store
 		this.unlisten = listenDocumentChanges(store, () => {
+			if (!this.acceptEdits) return
 			this.session.documentRevision += 1
 			this.setUi({
 				dirty: this.isDirty(),
@@ -523,7 +564,9 @@ export class DocumentController {
 	}
 
 	private setUi(patch: Partial<AppUiState>): void {
-		this.ui = { ...this.ui, ...patch, dirty: patch.dirty ?? this.isDirty() }
+		const next: AppUiState = { ...this.ui, ...patch, dirty: patch.dirty ?? this.isDirty() }
+		if (isSameUiState(this.ui, next)) return
+		this.ui = next
 		for (const listener of this.listeners) listener(this.ui)
 	}
 }
