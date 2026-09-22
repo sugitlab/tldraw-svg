@@ -9,7 +9,17 @@ async function waitReady(page: Page) {
 
 async function openSvgText(page: Page, text: string) {
 	const pending = page.evaluate((xml) => window.__tldrawSvg!.openSvgText(xml), text)
-	await page.getByRole('button', { name: '破棄' }).click({ timeout: 20_000 })
+	const discard = page.getByRole('button', { name: '破棄' })
+	const started = Date.now()
+	while (Date.now() - started < 25_000) {
+		const finished = await Promise.race([pending.then(() => true), page.waitForTimeout(50).then(() => false)])
+		if (finished) return
+		if (await discard.isVisible()) {
+			await discard.click()
+			await pending
+			return
+		}
+	}
 	await pending
 }
 
