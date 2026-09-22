@@ -39,6 +39,22 @@ cp .env.example .env
 
 フォント・アイコン・翻訳は `@tldraw/assets` から同一オリジンで配信し、既定の CDN には依存しません。
 
+## GitHub Pages
+
+静的サイトとして公開できます。プロジェクトサイトの URL は次の形です。
+
+`https://<user>.github.io/tldraw-svg/`
+
+1. GitHub の Settings → Pages → Build and deployment → Source を **GitHub Actions** にする
+2. 触れるサンプルにするなら、[trial](https://tldraw.dev/community/license) または [hobby](https://tldraw.dev/get-a-license/hobby) のキーを発行する
+3. Settings → Secrets and variables → Actions に `VITE_TLDRAW_LICENSE_KEY` を入れる
+4. キーの許可ホストに `<user>.github.io` を含める
+5. `main` へ push するか、Actions の **Deploy GitHub Pages** を手動実行する
+
+キーなしでもデプロイ自体は成功しますが、HTTPS の公開ドメインでは tldraw が本番判定になり、**数秒後にエディタ描画が止まります**。SDK の判定は無効化していません。localhost の `npm run dev` はキーなしで動きます。
+
+Chrome では、Pages が HTTPS なので File System Access の上書き保存が使えます。Google Drive for Desktop の同期フォルダを選ぶ運用ができます。Firefox はダウンロード保存です。
+
 ## ファイル形式
 
 - 実体は UTF-8 の SVG（`image/svg+xml`）

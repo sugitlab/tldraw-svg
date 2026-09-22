@@ -13,7 +13,7 @@ import { StatusBar } from '@/app/StatusBar'
 import { registerAppContentHandlers } from '@/app/contentHandlers'
 import { createDemo } from '@/app/demos'
 import { ACCEPTED_IMAGE_MIME_TYPES } from '@/config/app'
-import { assetUrls, editorMediaLimits, licenseKey } from '@/config/assets'
+import { assetUrls, editorMediaLimits, licenseKey, needsProductionLicenseNotice } from '@/config/assets'
 import { DocumentController } from '@/document/DocumentController'
 import { createAppStore } from '@/document/tldrawAdapter'
 import type {
@@ -171,6 +171,12 @@ export function EditorApp() {
 
 	return (
 		<div className={`app-shell${ui.locked ? ' is-locked' : ''}`}>
+			{needsProductionLicenseNotice() ? (
+				<div className="license-banner" data-testid="license-banner">
+					GitHub Pages などの本番公開には tldraw のライセンスキーが必要です。キーがないと数秒後にエディタが停止します。
+					リポジトリの Actions secrets に <code>VITE_TLDRAW_LICENSE_KEY</code> を入れ、許可ホストへこの Pages のドメイン（例: sugitlab.github.io）を含めてください。localhost ではキーなしで使えます。
+				</div>
+			) : null}
 			<StatusBar state={ui} />
 			<div className="editor-frame">
 				<Tldraw

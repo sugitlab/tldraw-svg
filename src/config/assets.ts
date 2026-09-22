@@ -18,3 +18,12 @@ export function licenseKey(): string | undefined {
 	const value = import.meta.env.VITE_TLDRAW_LICENSE_KEY
 	return value && value.length > 0 ? value : undefined
 }
+
+export function needsProductionLicenseNotice(): boolean {
+	if (typeof window === 'undefined') return false
+	if (licenseKey()) return false
+	const { protocol, hostname } = window.location
+	const host = hostname.toLowerCase().replace(/^\[|\]$/g, '')
+	const loopback = host === 'localhost' || host === '::1' || /^127(?:\.\d{1,3}){3}$/.test(host)
+	return protocol === 'https:' && !loopback
+}

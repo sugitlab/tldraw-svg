@@ -5,6 +5,7 @@ test.describe('tldraw-svg editor', () => {
 		await page.goto('/')
 		await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
 		await expect(page.getByTestId('file-name')).toHaveText('untitled.tldraw.svg')
+		await expect(page.getByTestId('license-banner')).toHaveCount(0)
 	})
 
 	test('D01/D03/D06: create, save, reload, and keep pages', async ({ page }) => {
