@@ -37,6 +37,7 @@ describe('DocumentController UI updates', () => {
 	it('does not notify listeners again while already dirty with the same status', () => {
 		const store = createAppStore()
 		const controller = new DocumentController(store, hooks())
+		controller.beginTrackingEdits()
 		const listener = vi.fn()
 		controller.subscribe(listener)
 		listener.mockClear()
@@ -61,6 +62,7 @@ describe('DocumentController UI updates', () => {
 	it('resumes document listeners after dispose', () => {
 		const store = createAppStore()
 		const controller = new DocumentController(store, hooks())
+		controller.beginTrackingEdits()
 		const listener = vi.fn()
 		controller.subscribe(listener)
 		listener.mockClear()
@@ -73,6 +75,7 @@ describe('DocumentController UI updates', () => {
 		expect(listener).not.toHaveBeenCalled()
 
 		controller.start()
+		controller.beginTrackingEdits()
 		store.put([{ ...page, name: 'after-start' }])
 		expect(listener).toHaveBeenCalledTimes(1)
 		expect(controller.isDirty()).toBe(true)

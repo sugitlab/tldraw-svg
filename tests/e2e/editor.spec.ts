@@ -2,6 +2,9 @@ import { expect, test, type Page } from '@playwright/test'
 
 async function waitReady(page: Page) {
 	await page.waitForFunction(() => window.__tldrawSvg?.ready === true, null, { timeout: 60_000 })
+	await page.evaluate(
+		() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+	)
 }
 
 async function openSvgText(page: Page, text: string) {
@@ -15,6 +18,8 @@ test.describe('tldraw-svg editor', () => {
 		await page.goto('/')
 		await waitReady(page)
 		await expect(page.getByTestId('file-name')).toHaveText('untitled.tldraw.svg')
+		await expect(page.getByTestId('dirty-state')).toHaveText('保存済み')
+		expect(await page.evaluate(() => window.__tldrawSvg!.isDirty())).toBe(false)
 		await expect(page.getByTestId('license-banner')).toHaveCount(0)
 	})
 
