@@ -35,13 +35,22 @@ body,
 
 .status-bar {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 12px;
 	align-items: center;
 	padding: 8px 12px;
 	background: #f4f4f2;
 	border-bottom: 1px solid #d6d6d2;
 	font-size: 13px;
+	min-height: 37px;
+	box-sizing: border-box;
+}
+
+.status-bar [data-testid='status-text'] {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
 }
 
 .status-error {

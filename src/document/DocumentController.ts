@@ -23,6 +23,7 @@ import type {
 	UnsavedChoice,
 	WriteResult,
 } from '@/document/types'
+import { isSameUiState } from '@/document/types'
 import { renderPreview } from '@/export/renderPreview'
 import { createPayload } from '@/format/payload'
 import { displayFileName, normalizeSaveName, previewExportName } from '@/format/filename'
@@ -523,7 +524,9 @@ export class DocumentController {
 	}
 
 	private setUi(patch: Partial<AppUiState>): void {
-		this.ui = { ...this.ui, ...patch, dirty: patch.dirty ?? this.isDirty() }
+		const next: AppUiState = { ...this.ui, ...patch, dirty: patch.dirty ?? this.isDirty() }
+		if (isSameUiState(this.ui, next)) return
+		this.ui = next
 		for (const listener of this.listeners) listener(this.ui)
 	}
 }

@@ -62,6 +62,17 @@ export type AppUiState = {
 	locked: boolean
 }
 
+export function isSameUiState(a: AppUiState, b: AppUiState): boolean {
+	return (
+		a.fileName === b.fileName &&
+		a.dirty === b.dirty &&
+		a.busy === b.busy &&
+		a.status === b.status &&
+		a.error === b.error &&
+		a.locked === b.locked
+	)
+}
+
 export type UnsavedChoice = 'save' | 'discard' | 'cancel'
 export type ExternalChangeChoice = 'save-as' | 'cancel'
 export type RecoveryChoice = 'restore' | 'discard'

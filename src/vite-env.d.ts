@@ -9,8 +9,10 @@ interface ImportMeta {
 }
 
 interface Window {
+	__tldrawSvgMountCount?: number
 	__tldrawSvg?: {
 		ready: boolean
+		mountCount: number
 		encodeCurrent(): Promise<string>
 		openSvgText(text: string): Promise<void>
 		getFileName(): string
